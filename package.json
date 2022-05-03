@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/yarman1/ip_manipulator/issues"
   },
-  "homepage": "https://github.com/yarman1/ip_manipulator#readme"
+  "homepage": "https://github.com/yarman1/ip_manipulator#readme",
+  "devDependencies": {
+    "eslint": "^8.14.0"
+  }
 }
