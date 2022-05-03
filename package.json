@@ -4,7 +4,7 @@
   "description": "Library for working with ip addresses",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "eslint . --fix && prettier --write \"**/*.js\" \"**/*.json\""
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/yarman1/ip_manipulator#readme",
   "devDependencies": {
-    "eslint": "^8.14.0"
+    "eslint": "^8.14.0",
+    "prettier": "^2.6.2"
   }
 }
