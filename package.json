@@ -4,7 +4,8 @@
   "description": "Library for working with ip addresses",
   "main": "ip_manipulator.js",
   "scripts": {
-    "test": "eslint . --fix && prettier --write \"**/*.js\" \"**/*.json\""
+    "test": "test",
+    "lint": "eslint . --fix && prettier --write \"**/*.js\" \"**/*.json\""
   },
   "repository": {
     "type": "git",
