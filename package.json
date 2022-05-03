@@ -1,0 +1,24 @@
+{
+  "name": "ip_manipulator",
+  "version": "1.0.0",
+  "description": "Library for working with ip addresses",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yarman1/ip_manipulator.git"
+  },
+  "keywords": [
+    "ip",
+    "ipv4",
+    "ipv6"
+  ],
+  "author": "Yaroslav Hordiienko <gordienkoyar1@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yarman1/ip_manipulator/issues"
+  },
+  "homepage": "https://github.com/yarman1/ip_manipulator#readme"
+}
