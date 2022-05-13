@@ -2,7 +2,7 @@
   "name": "ip_manipulator",
   "version": "1.0.0",
   "description": "Library for working with ip addresses",
-  "main": "ip_manipulator.js",
+  "main": "ip-manipulator.js",
   "scripts": {
     "test": "test",
     "lint": "eslint . --fix && prettier --write \"**/*.js\" \"**/*.json\""
