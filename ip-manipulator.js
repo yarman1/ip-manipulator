@@ -17,8 +17,8 @@ ipv4.isValid = function(ip) {
   if (parts.length > ipv4Length || parts.length < 1) {
     return false;
   }
-  const ipv4Dec = REG_EXPESSIONS.ipv4Dec;
-  const ipv4Hex = REG_EXPESSIONS.ipv4Hex;
+  const { ipv4Dec } = REG_EXPESSIONS;
+  const { ipv4Hex } = REG_EXPESSIONS;
   const res = [];
   for (const part of parts) {
     if (!ipv4Dec.test(part) && !ipv4Hex.test(part)) {
