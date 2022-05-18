@@ -7,6 +7,7 @@ const NUMBER_CONSTANTS = {
 const REG_EXPESSIONS = {
   ipv4Hex: /^(0x)?[a-f0-9]{1,2}$/i,
   ipv4Dec: /^25[0-5]$|^2[0-4][0-9]$|^[01]?[0-9][0-9]$|^[0-9]$/,
+  ipv6: /^[0-9a-f]{1,4}$/i,
 };
 
 const ipv4 = {};
