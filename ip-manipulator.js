@@ -11,6 +11,7 @@ const REG_EXPESSIONS = {
 };
 
 const ipv4 = {};
+const ipv6 = {};
 
 ipv4.isValid = function(ip) {
   const parts = ip.split('.');
@@ -28,3 +29,13 @@ ipv4.isValid = function(ip) {
   }
   return true;
 };
+
+ipv6.isValid = function(ip) {
+  const parts = ip.split(':');
+  const { ipv6 } = REG_EXPESSIONS;
+  for (const part of parts) {
+    if (!part) continue;
+    if (!ipv6.test(part)) return false;
+  }
+  return true;
+}
