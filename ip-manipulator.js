@@ -13,15 +13,13 @@ const REG_EXPESSIONS = {
 const ipv4 = {};
 const ipv6 = {};
 
-ipv4.isValid = function(ip) {
+ipv4.isValid = function (ip) {
   const parts = ip.split('.');
   const { ipv4Length } = NUMBER_CONSTANTS;
   if (parts.length > ipv4Length || parts.length < 1) {
     return false;
   }
-  const { ipv4Dec } = REG_EXPESSIONS;
-  const { ipv4Hex } = REG_EXPESSIONS;
-  const res = [];
+  const { ipv4Dec, ipv4Hex } = REG_EXPESSIONS;
   for (const part of parts) {
     if (!ipv4Dec.test(part) && !ipv4Hex.test(part)) {
       return false;
@@ -30,7 +28,7 @@ ipv4.isValid = function(ip) {
   return true;
 };
 
-ipv6.isValid = function(ip) {
+ipv6.isValid = function (ip) {
   const parts = ip.split(':');
   const { ipv6 } = REG_EXPESSIONS;
   for (const part of parts) {
@@ -38,4 +36,4 @@ ipv6.isValid = function(ip) {
     if (!ipv6.test(part)) return false;
   }
   return true;
-}
+};
