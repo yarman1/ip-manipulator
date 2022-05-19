@@ -1,5 +1,5 @@
 {
-  "name": "ip_manipulator",
+  "name": "ip-manipulator",
   "version": "1.0.0",
   "description": "Library for working with ip addresses",
   "main": "ip-manipulator.js",
