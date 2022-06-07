@@ -5,27 +5,29 @@ const NUMBER_CONSTANTS = {
   ipv6Length: 8,
 };
 
-const V4_DEC_PART = '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]';
-const V6_PART = '[0-9a-fA-F]';
-
 const IP_PARTS = {
-  v4HexPart: '((0x)?[a-f0-9]{1,2}',
-  v4DecFull: `((${V4_DEC_PART})\\.){3,3}(${V4_DEC_PART})`,
-  v6Part: '[0-9a-fA-F]',
+  v4Dec: '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]',
+  v4Hex: '(0x)?[a-f0-9]{1,2}',
+  v6: '[0-9a-fA-F]',
   v6ZoneId: '%[0-9a-z]{1,}',
-  v6Native: `(::)?(${V6_PART}{1,4}::?){0,}(${V6_PART}{1,4}){0,}:{0,2}`,
+};
+
+const IP_FULL = {
+  v4Dec: `((${IP_PARTS.v4Dec})\\.){3,3}(${IP_PARTS.v4Dec})`,
+  v4Hex: `(${IP_PARTS.v4Hex}\\.){3,3}${IP_PARTS.v4Hex}`,
+  v6Native: `(::)?(${IP_PARTS.v6}{1,4}::?){0,}(${IP_PARTS.v6}{1,4}){0,}:{0,2}`,
 };
 
 const IPV4_REG_EXPESSIONS = {
-  v4Dec: `^${IP_PARTS.v4DecFull}$`,
-  v4Hex: `^${IP_PARTS.v4HexPart}\\.){3,3}${IP_PARTS.v4HexPart})$`,
+  v4Dec: `^${IP_FULL.v4Dec}$`,
+  v4Hex: `^${IP_FULL.v4Hex}$`,
 };
 
 const IPV6_REG_EXPRESSIONS = {
-  v6NativeFull: `^${IP_PARTS.v6Native}$`,
-  v6LinkLoc: `^fe80:((:${IP_PARTS.v6Part}){1,4}){0,4}|(:)${IP_PARTS.v6ZoneId}$`,
-  v6Mapped: `^::ffff(:0{1,4}){0,1}:${IP_PARTS.v4DecFull}$`,
-  v6Embedded: `^${IP_PARTS.v6Native}${IP_PARTS.v4DecFull}$`,
+  v6Native: `^${IP_FULL.v6Native}$`,
+  v6LinkLoc: `^fe80:((:${IP_PARTS.v6}){1,4}){0,4}|(:)${IP_PARTS.v6ZoneId}$`,
+  v6Mapped: `^::ffff(:0{1,4}){0,1}:${IP_FULL.v4Dec}$`,
+  v6Embedded: `^${IP_FULL.v6Native}${IP_FULL.v4Dec}$`,
 };
 
 const ipv4 = {};
