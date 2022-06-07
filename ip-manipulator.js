@@ -4,10 +4,11 @@ const NUMBER_CONSTANTS = {
   ipv4Length: 4,
 };
 
+const V4_DEC_PART = '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]';
+
 const IP_PARTS = {
   v4HexPart: '((0x)?[a-f0-9]{1,2}',
-  v4DecPart: '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]',
-  v4DecFull: `((${this.v4DecPart})\\.){3,3}(${this.v4DecPart})`,
+  v4DecFull: `((${V4_DEC_PART})\\.){3,3}(${V4_DEC_PART})`,
   v6Part: '[0-9a-fA-F]',
   v6ZoneId: '%[0-9a-z]{1,}',
 };
@@ -28,10 +29,10 @@ const ipv6 = {};
 
 ipv4.isValid = function(ip) {
   if (!ip) return false;
-  const { ipv4DecPart, ipv4Hex } = REG_EXPESSIONS;
-  const ipv4Dec = '^((' + ipv4DecPart + ')\\.){3,3}(' + ipv4DecPart + ')$';
-  const regExp = new RegExp(ipv4Hex + '|' + ipv4Dec, 'i');
-  return regExp.test(ip);
+  const { v4Dec, v4Hex } = IP_REG_EXPESSIONS;
+  const ipv4Full = v4Dec + '|' + v4Hex;
+  const ipv4RegExp = new RegExp(ipv4Full, 'i');
+  return ipv4RegExp.test(ip);
 };
 
 ipv6.isValid = function(ip) {
