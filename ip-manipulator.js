@@ -59,11 +59,7 @@ ipv6.isValid = function(ip) {
   if (ip.indexOf('::') !== ip.lastIndexOf('::')) {
     return false;
   }
-  const ipv6Full = [];
-  const keys = Object.keys(IPV6_REG_EXPRESSIONS);
-  for (const key of keys) {
-    ipv6Full.push(IPV6_REG_EXPRESSIONS[key]);
-  }
+  const ipv6Full = Object.values(IPV6_REG_EXPRESSIONS);
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
   return ipv6RegExp.test(ip);
 };
