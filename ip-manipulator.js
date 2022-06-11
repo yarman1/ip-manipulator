@@ -63,3 +63,6 @@ ipv6.isValid = function(ip) {
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
   return ipv6RegExp.test(ip);
 };
+
+module.exports.ipv4 = ipv4;
+module.exports.ipv6 = ipv6;
