@@ -3,6 +3,8 @@
 const NUMBER_CONSTANTS = {
   ipv4Length: 4,
   ipv6Length: 8,
+  ipv4PartMax: 255,
+  ipv4PartMin: 0,
 };
 
 const IP_PARTS = {
@@ -32,10 +34,32 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
-const ipv4 = {};
+ipMain.IPv4 = (function() {
+  class Ipv4 {
+    constructor(parts) {
+      const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
+      if (parts.length !== ipv4Length) {
+        throw new Error('ip-manipulator: invalid octets number');
+      }
+      for (const part of parts) {
+        if (part < ipv4PartMin || part > ipv4PartMax) {
+          throw new Error('ip-manipulator: invalid octet value');
+        }
+      }
+      this.parts = parts;
+      this.type = 'IPv4';
+    }
+    kind() {
+      const mak = this.isValid('192.168.0.1');
+      return mak;
+    }
+  }
+  return Ipv4;
+})();
+
 const ipv6 = {};
 
-ipv4.isValid = function(ip) {
+ipMain.IPv4.isValid = function(ip) {
   if (!ip) return false;
   const { v4Dec, v4Hex } = IPV4_REG_EXPESSIONS;
   const ipv4Full = v4Dec + '|' + v4Hex;
