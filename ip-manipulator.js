@@ -30,6 +30,8 @@ const IPV6_REG_EXPRESSIONS = {
   v6Embedded: `^${IP_FULL.v6Native}${IP_FULL.v4Dec}$`,
 };
 
+const ipMain = {};
+
 const ipv4 = {};
 const ipv6 = {};
 
@@ -64,5 +66,4 @@ ipv6.isValid = function(ip) {
   return ipv6RegExp.test(ip);
 };
 
-module.exports.ipv4 = ipv4;
-module.exports.ipv6 = ipv6;
+module.exports = ipMain;
