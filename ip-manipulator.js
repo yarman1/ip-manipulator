@@ -5,6 +5,8 @@ const NUMBER_CONSTANTS = {
   ipv6Length: 8,
   ipv4PartMax: 255,
   ipv4PartMin: 0,
+  ipv6PartMax: 0xffff,
+  ipv6PartMin: 0,
 };
 
 const IP_PARTS = {
@@ -57,8 +59,6 @@ ipMain.IPv4 = (function() {
   return Ipv4;
 })();
 
-const ipv6 = {};
-
 ipMain.IPv4.isValid = function(ip) {
   if (!ip) return false;
   const { v4Dec, v4Hex } = IPV4_REG_EXPESSIONS;
@@ -67,12 +67,32 @@ ipMain.IPv4.isValid = function(ip) {
   return ipv4RegExp.test(ip);
 };
 
-ipv6.isEmbedded = function(ip) {
+ipMain.IPv6 = (function() {
+  class Ipv6 {
+    constructor(parts) {
+      const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
+      if (parts.length !== ipv6Length) {
+        throw new Error('ip-manipulator: invalid parts number');
+      }
+      for (const part of parts) {
+        if (part < ipv6PartMin || part > ipv6PartMax) {
+          throw new Error('ip-manipulator: invalid part value');
+        }
+      }
+      this.parts = parts;
+      this.type = 'IPv6';
+    }
+  }
+
+  return Ipv6;
+})();
+
+ipMain.IPv6.isEmbedded = function(ip) {
   const lastPart = ip.split(':').pop();
   return lastPart !== lastPart.split('.')[0];
 };
 
-ipv6.isValid = function(ip) {
+ipMain.IPv6.isValid = function(ip) {
   const { ipv6Length } = NUMBER_CONSTANTS;
   let ipLength = ip.split(':').length;
   if (this.isEmbedded(ip)) {
