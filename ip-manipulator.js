@@ -67,6 +67,37 @@ ipMain.IPv4.isValid = function(ip) {
   return ipv4RegExp.test(ip);
 };
 
+ipMain.IPv4._parser = function(ip) {
+  if (!this.isValid(ip)) {
+    return null;
+  }
+
+  const { v4Hex } = IPV4_REG_EXPESSIONS;
+  const hexRegExp = new RegExp(v4Hex, 'i');
+
+  if (hexRegExp.test(ip)) {
+    const parts = ip.split('.').map((part) => {
+      if (part.includes('0x')) {
+        return parseInt(part);
+      } else {
+        return parseInt('0x' + part);
+      }
+    });
+    return parts;
+  } else {
+    const parts = ip.split('.').map((part) => parseInt(part));
+    return parts;
+  }
+};
+
+ipMain.IPv4._parse = function(ip) {
+  const result = this._parser(ip);
+  if (result) {
+    return new this(result);
+  }
+  return null;
+};
+
 ipMain.IPv6 = (function() {
   class Ipv6 {
     constructor(parts) {
@@ -109,5 +140,9 @@ ipMain.IPv6.isValid = function(ip) {
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
   return ipv6RegExp.test(ip);
 };
+
+// ipMain.parse = function(ip) {
+
+// };
 
 module.exports = ipMain;
