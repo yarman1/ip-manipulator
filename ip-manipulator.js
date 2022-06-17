@@ -100,7 +100,7 @@ ipMain.IPv4._parse = function(ip) {
 
 ipMain.IPv6 = (function() {
   class Ipv6 {
-    constructor(parts) {
+    constructor(parts, zoneId) {
       const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
       if (parts.length !== ipv6Length) {
         throw new Error('ip-manipulator: invalid parts number');
@@ -112,6 +112,9 @@ ipMain.IPv6 = (function() {
       }
       this.parts = parts;
       this.type = 'IPv6';
+      if (zoneId) {
+        this.zoneId = zoneId;
+      }
     }
   }
 
@@ -140,6 +143,49 @@ ipMain.IPv6.isValid = function(ip) {
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
   return ipv6RegExp.test(ip);
 };
+
+ipMain.IPv6._parser = function(ip) {
+  if (!this.isValid(ip)) {
+    return null;
+  }
+  const { ipv6Length } = NUMBER_CONSTANTS;
+  const result = {
+    parts: [],
+    zoneId: null,
+  };
+
+  const parts = ip.split(':');
+
+  for (const part of parts) {
+    if (!part) {
+      for (let i = 0; i <= ipv6Length - parts.length; i++) {
+        result.parts.push(0);
+      }
+    } else if (part.includes('%')) {
+      const lastPart = part.split('%');
+      result.parts.push(parseInt('0x' + lastPart[0]));
+      result.zoneId = lastPart[1];
+    } else if (this.isEmbedded(part)) {
+      const lastPart = part.split('.').map((octet) => parseInt(octet));
+      for (let i = 0; i < lastPart.length; i += 2) {
+        const v6Part = lastPart[i] * 256 + lastPart[i + 1]; //magic number
+        result.parts.push(v6Part);
+      }
+    } else {
+      result.parts.push(parseInt('0x' + part));
+    }
+  }
+
+  return result;
+};
+
+// ipMain.IPv6._parse = function(ip) {
+//   const result = this._parser(ip);
+//   if (result) {
+//     return new this(result);
+//   }
+//   return null;
+// };
 
 // ipMain.parse = function(ip) {
 
