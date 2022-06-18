@@ -30,7 +30,7 @@ const IPV4_REG_EXPESSIONS = {
 
 const IPV6_REG_EXPRESSIONS = {
   v6Native: `^${IP_FULL.v6Native}$`,
-  v6LinkLoc: `^(fe80:(:((${IP_PARTS.v6}){1,4}){0,4}|:)(${IP_PARTS.v6ZoneId}))$`,
+  v6LinkLoc: `^(fe80:((:(${IP_PARTS.v6}){1,4}){0,4}|:)(${IP_PARTS.v6ZoneId}))$`,
   v6Mapped: `^::ffff(:0{1,4}){0,1}:${IP_FULL.v4Dec}$`,
   v6Embedded: `^${IP_FULL.v6Native}${IP_FULL.v4Dec}$`,
 };
@@ -142,7 +142,6 @@ ipMain.IPv6.isValid = function(ip) {
   }
   const ipv6Full = Object.values(IPV6_REG_EXPRESSIONS);
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
-  console.log(ipv6RegExp);
   return ipv6RegExp.test(ip);
 };
 

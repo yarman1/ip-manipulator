@@ -1,6 +1,6 @@
 'use strict';
 
-const { ipv4, ipv6 } = require('../ip-manipulator');
+const ipMain = require('../ip-manipulator');
 const assert = require('assert').strict;
 
 // Tests of validation system.
@@ -24,14 +24,14 @@ const tester = function(data, obj, funcName) {
 
 {
   const validationIpv4Tests = [
-    ['192.168.0.1', false, 'Valid decimal IPv4 address'],
+    ['192.168.0.1', true, 'Valid decimal IPv4 address'],
     ['256.255.255.255', false, 'Invalid decimal IPv4 address'],
     ['c0.A8.0.1', true, 'Valid hexadecimal IPv4 address'],
     ['0xc0.0xA8.0x0.0x1', true, 'Another example of valid hex IPv4 address'],
     ['ac.10.8e.fff', false, 'Invalid hexadecimal IPv4 address'],
   ];
 
-  tester(validationIpv4Tests, ipv4, 'isValid');
+  tester(validationIpv4Tests, ipMain.IPv4, 'isValid');
 }
 
 {
@@ -43,7 +43,7 @@ const tester = function(data, obj, funcName) {
     ['::ffff:192.168.0.1', true, 'Mapped IPv6 address'],
     ['64:ff96:1:a345:c70:2cfa:192.168.0.1', true, 'IPv4 embedded IPv6 address'],
   ];
-  tester(validationIpv6Tests, ipv6, 'isValid');
+  tester(validationIpv6Tests, ipMain.IPv6, 'isValid');
 }
 
 console.table(results);
