@@ -48,3 +48,41 @@ const tester = function(data, testOp, resultArray, obj, funcName, property) {
   console.table(results);
 
 }
+
+// Tests of parsing system
+// It correctly parses IPv4 addresses as well as various IPv6 addresses
+
+{
+  console.log(' ');
+  console.log('Parsing tests');
+
+  const results = [];
+
+  const parsingTests = [
+    ['192.168.0.1',
+      [192, 168, 0, 1],
+      'Decimal IPv4 address'],
+    ['c0.A8.0.1',
+      [192, 168, 0, 1],
+      'Hexadecimal IPv4 address'],
+    ['0xc0.0xA8.0x0.0x1',
+      [192, 168, 0, 1],
+      'Another hex IPv4 address'],
+    ['2001:0db8::8A2e:07a0:765d',
+      [8193, 3512, 0, 0, 0, 35374, 1952, 30301],
+      'IPv6 native address'],
+    ['fe80::ce80:ff88%eth2',
+      [65152, 0, 0, 0, 0, 0, 52864, 65416],
+      'Link local IPv6 address'],
+    ['::ffff:192.168.0.1',
+      [0, 0, 0, 0, 0, 65535, 49320, 1],
+      'Mapped IPv6 address'],
+    ['64:ff96:1:a345:c70:2cfa:192.168.0.1',
+      [100, 65430, 1, 41797, 3184, 11514, 49320, 1],
+      'IPv4 embedded IPv6 address'],
+  ];
+
+  tester(parsingTests, 'deepEqual', results, ipMain, 'parse', 'parts');
+
+  console.table(results);
+}
