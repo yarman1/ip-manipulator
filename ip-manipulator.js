@@ -7,6 +7,7 @@ const NUMBER_CONSTANTS = {
   ipv4PartMin: 0,
   ipv6PartMax: 0xffff,
   ipv6PartMin: 0,
+  allOctetsValues: 256,
 };
 
 const IP_PARTS = {
@@ -149,7 +150,7 @@ ipMain.IPv6._parser = function(ip) {
   if (!this.isValid(ip)) {
     return null;
   }
-  const { ipv6Length } = NUMBER_CONSTANTS;
+  const { ipv6Length, allOctetsValues } = NUMBER_CONSTANTS;
   const result = {
     parts: [],
     zoneId: null,
@@ -176,7 +177,7 @@ ipMain.IPv6._parser = function(ip) {
     } else if (this.isEmbedded(part)) {
       const lastPart = part.split('.').map((octet) => parseInt(octet));
       for (let i = 0; i < lastPart.length; i += 2) {
-        const v6Part = lastPart[i] * 256 + lastPart[i + 1]; //magic number
+        const v6Part = lastPart[i] * allOctetsValues + lastPart[i + 1];
         result.parts.push(v6Part);
       }
     } else {
