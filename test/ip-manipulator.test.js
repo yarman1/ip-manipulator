@@ -7,22 +7,23 @@ const assert = require('assert').strict;
 // It can validate: decimal and hexadecimal(isn't case sensitive) IPv4 addresses
 // IPv6: native, link local, mapped, IPv4 embedded variants
 
-const results = [];
-
-const tester = function(data, obj, funcName) {
+const tester = function(data, testOp, resultArray, obj, funcName, property) {
   for (const test of data) {
     const [par, expected, name] = test;
-    const result = obj[funcName](par);
+    const result = property ? obj[funcName](par)[property] : obj[funcName](par);
     try {
-      assert.strictEqual(result, expected, `Error in test "${name}"`);
+      assert[testOp](result, expected, `Error in test "${name}"`);
     } catch (err) {
       const { message, operator } = err;
-      results.push({ message, par, expected, result, operator });
+      resultArray.push({ message, par, expected, result, operator });
     }
   }
 };
 
 {
+  console.log('Validation tests');
+  const results = [];
+
   const validationIpv4Tests = [
     ['192.168.0.1', true, 'Valid decimal IPv4 address'],
     ['256.255.255.255', false, 'Invalid decimal IPv4 address'],
@@ -31,10 +32,8 @@ const tester = function(data, obj, funcName) {
     ['ac.10.8e.fff', false, 'Invalid hexadecimal IPv4 address'],
   ];
 
-  tester(validationIpv4Tests, ipMain.IPv4, 'isValid');
-}
+  tester(validationIpv4Tests, 'strictEqual', results, ipMain.IPv4, 'isValid');
 
-{
   const validationIpv6Tests = [
     ['2001:0db8::8A2e:07a0:765d', true, 'Valid IPv6 native address'],
     ['fd3f::c126:9e70:532f::', false, 'Invalid IPv6 native address'],
@@ -43,7 +42,9 @@ const tester = function(data, obj, funcName) {
     ['::ffff:192.168.0.1', true, 'Mapped IPv6 address'],
     ['64:ff96:1:a345:c70:2cfa:192.168.0.1', true, 'IPv4 embedded IPv6 address'],
   ];
-  tester(validationIpv6Tests, ipMain.IPv6, 'isValid');
-}
 
-console.table(results);
+  tester(validationIpv6Tests, 'strictEqual', results, ipMain.IPv6, 'isValid');
+
+  console.table(results);
+
+}
