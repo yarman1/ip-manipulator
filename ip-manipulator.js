@@ -12,7 +12,7 @@ const NUMBER_CONSTANTS = {
 const IP_PARTS = {
   v4Dec: '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]',
   v4Hex: '(0x)?[a-f0-9]{1,2}',
-  v6: '[0-9a-fA-F]',
+  v6: '[0-9a-f]',
   v6ZoneId: '%[0-9a-z]{1,}',
 };
 
@@ -29,7 +29,7 @@ const IPV4_REG_EXPESSIONS = {
 
 const IPV6_REG_EXPRESSIONS = {
   v6Native: `^${IP_FULL.v6Native}$`,
-  v6LinkLoc: `^fe80:((:${IP_PARTS.v6}){1,4}){0,4}|(:)${IP_PARTS.v6ZoneId}$`,
+  v6LinkLoc: `^(fe80:(:((${IP_PARTS.v6}){1,4}){0,4}|:)(${IP_PARTS.v6ZoneId}))$`,
   v6Mapped: `^::ffff(:0{1,4}){0,1}:${IP_FULL.v4Dec}$`,
   v6Embedded: `^${IP_FULL.v6Native}${IP_FULL.v4Dec}$`,
 };
@@ -141,6 +141,7 @@ ipMain.IPv6.isValid = function(ip) {
   }
   const ipv6Full = Object.values(IPV6_REG_EXPRESSIONS);
   const ipv6RegExp = new RegExp(ipv6Full.join('|'), 'i');
+  console.log(ipv6RegExp);
   return ipv6RegExp.test(ip);
 };
 
@@ -153,17 +154,24 @@ ipMain.IPv6._parser = function(ip) {
     parts: [],
     zoneId: null,
   };
+  const embedded = this.isEmbedded(ip) ? 1 : 0;
 
   const parts = ip.split(':');
-
+  if (parts.indexOf('') !== parts.lastIndexOf('')) {
+    parts.splice(parts.indexOf(''), 1);
+  }
   for (const part of parts) {
     if (!part) {
-      for (let i = 0; i <= ipv6Length - parts.length; i++) {
+      for (let i = 0; i <= ipv6Length - parts.length - embedded; i++) {
         result.parts.push(0);
       }
     } else if (part.includes('%')) {
       const lastPart = part.split('%');
-      result.parts.push(parseInt('0x' + lastPart[0]));
+      if (lastPart[0]) {
+        result.parts.push(parseInt('0x' + lastPart[0]));
+      } else {
+        result.parts.push(0);
+      }
       result.zoneId = lastPart[1];
     } else if (this.isEmbedded(part)) {
       const lastPart = part.split('.').map((octet) => parseInt(octet));
@@ -179,16 +187,25 @@ ipMain.IPv6._parser = function(ip) {
   return result;
 };
 
-// ipMain.IPv6._parse = function(ip) {
-//   const result = this._parser(ip);
-//   if (result) {
-//     return new this(result);
-//   }
-//   return null;
-// };
+ipMain.IPv6._parse = function(ip) {
+  const result = this._parser(ip);
+  if (result) {
+    return new this(...Object.values(result));
+  }
+  return null;
+};
 
-// ipMain.parse = function(ip) {
+ipMain.parse = function(ip) {
+  const ipv4Result = this.IPv4._parse(ip);
+  const ipv6Result = this.IPv6._parse(ip);
 
-// };
+  if (ipv4Result) {
+    return ipv4Result;
+  } else if (ipv6Result) {
+    return ipv6Result;
+  }
+
+  throw new Error('ip-manipulator: invalid ip address');
+};
 
 module.exports = ipMain;
