@@ -52,9 +52,16 @@ ipMain.IPv4 = (function() {
       this.parts = parts;
       this.type = 'IPv4';
     }
-    kind() {
-      const mak = this.isValid('192.168.0.1');
-      return mak;
+    // kind() {
+    //   const mak = this.isValid('192.168.0.1');
+    //   return mak;
+    // }
+    toString() {
+      const res = [];
+      for (const part of this.parts) {
+        res.push(part.toString());
+      }
+      return res.join('.');
     }
   }
   return Ipv4;
@@ -207,5 +214,7 @@ ipMain.parse = function(ip) {
 
   throw new Error('ip-manipulator: invalid ip address');
 };
+
+console.log(ipMain.parse('192.168.0.1').toString());
 
 module.exports = ipMain;
