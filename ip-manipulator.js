@@ -8,6 +8,8 @@ const NUMBER_CONSTANTS = {
   ipv6PartMax: 0xffff,
   ipv6PartMin: 0,
   allOctetsValues: 256,
+  decBase: 10,
+  hexBase: 16,
 };
 
 const IP_PARTS = {
@@ -56,12 +58,22 @@ ipMain.IPv4 = (function() {
     //   const mak = this.isValid('192.168.0.1');
     //   return mak;
     // }
-    toString() {
+    _serializator(base) {
       const res = [];
       for (const part of this.parts) {
-        res.push(part.toString());
+        res.push(part.toString(base));
       }
       return res.join('.');
+    }
+
+    toString() {
+      const { decBase } = NUMBER_CONSTANTS;
+      return this._serializator(decBase);
+    }
+
+    toHexString() {
+      const { hexBase } = NUMBER_CONSTANTS;
+      return this._serializator(hexBase);
     }
   }
   return Ipv4;
@@ -215,6 +227,5 @@ ipMain.parse = function(ip) {
   throw new Error('ip-manipulator: invalid ip address');
 };
 
-console.log(ipMain.parse('192.168.0.1').toString());
 
 module.exports = ipMain;
