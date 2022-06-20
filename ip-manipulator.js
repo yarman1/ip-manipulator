@@ -136,6 +136,55 @@ ipMain.IPv6 = (function() {
         this.zoneId = zoneId;
       }
     }
+
+    _modifyShorteningState(state) {
+      if (state.length > state.cacheMax[0]) {
+        const { firstIndex, length } = state;
+        state.cacheMax = [length, firstIndex];
+      }
+    }
+
+    toString() {
+      const { hexBase, ipv6Length } = NUMBER_CONSTANTS;
+      const shorteningState = {
+        firstIndex: 0,
+        length: 0,
+        process: false,
+        cacheMax: [0, 0],
+      };
+
+      const stringArr = this.parts.map((part, index) => {
+        if (part === 0) {
+          if (!shorteningState.process) {
+            shorteningState.process = true;
+            shorteningState.firstIndex = index;
+            shorteningState.length = 1;
+          } else {
+            shorteningState.length++;
+          }
+          if (index === ipv6Length - 1) {
+            this._modifyShorteningState(shorteningState);
+          }
+        } else if (shorteningState.process) {
+          shorteningState.process = false;
+          this._modifyShorteningState(shorteningState);
+        }
+        return part.toString(hexBase);
+      });
+
+      const [length, firstIndex] = shorteningState.cacheMax;
+      if (firstIndex + length === stringArr.length || firstIndex === 0) {
+        stringArr.splice(firstIndex, length, ':');
+      } else {
+        stringArr.splice(firstIndex, length, '');
+      }
+
+      let res = stringArr.join(':');
+
+      if (this.zoneId) res += `%${this.zoneId}`;
+
+      return res;
+    }
   }
 
   return Ipv6;
