@@ -10,6 +10,7 @@ const NUMBER_CONSTANTS = {
   allOctetsValues: 256,
   decBase: 10,
   hexBase: 16,
+  ipv6PartNormalLength: 4,
 };
 
 const IP_PARTS = {
@@ -181,6 +182,26 @@ ipMain.IPv6 = (function() {
 
       let res = stringArr.join(':');
 
+      if (this.zoneId) res += `%${this.zoneId}`;
+
+      return res;
+    }
+
+    toNormalizedString() {
+      const { hexBase, ipv6PartNormalLength } = NUMBER_CONSTANTS;
+
+      const stringArr = this.parts.map((part) => {
+        let result = part.toString(hexBase);
+        const partLength = result.length;
+        if (partLength < ipv6PartNormalLength) {
+          for (let i = 0; i < ipv6PartNormalLength - partLength; i++) {
+            result = '0' + result;
+          }
+        }
+        return result;
+      });
+
+      let res = stringArr.join(':');
       if (this.zoneId) res += `%${this.zoneId}`;
 
       return res;
