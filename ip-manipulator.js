@@ -13,6 +13,14 @@ const NUMBER_CONSTANTS = {
   ipv6PartNormalLength: 4,
 };
 
+const ERROR_MESSAGES = {
+  prefix: 'ip-manipulator:',
+  partsNum: ' invalid parts number',
+  partValue: ' invalid part value',
+  linkLocEmbed: ' can\'t serialize embedded version of this address',
+  invalidIp: ' invalid ip address',
+};
+
 const IP_PARTS = {
   v4Dec: '25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]|[0-9]',
   v4Hex: '(0x)?[a-f0-9]{1,2}',
@@ -45,11 +53,13 @@ ipMain.IPv4 = (function() {
     constructor(parts) {
       const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
       if (parts.length !== ipv4Length) {
-        throw new Error('ip-manipulator: invalid octets number');
+        const { prefix, partsNum } = ERROR_MESSAGES;
+        throw new Error(prefix + partsNum);
       }
       for (const part of parts) {
         if (part < ipv4PartMin || part > ipv4PartMax) {
-          throw new Error('ip-manipulator: invalid octet value');
+          const { prefix, partValue } = ERROR_MESSAGES;
+          throw new Error(prefix + partValue);
         }
       }
       this.parts = parts;
@@ -124,11 +134,13 @@ ipMain.IPv6 = (function() {
     constructor(parts, zoneId) {
       const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
       if (parts.length !== ipv6Length) {
-        throw new Error('ip-manipulator: invalid parts number');
+        const { prefix, partsNum } = ERROR_MESSAGES;
+        throw new Error(prefix + partsNum);
       }
       for (const part of parts) {
         if (part < ipv6PartMin || part > ipv6PartMax) {
-          throw new Error('ip-manipulator: invalid part value');
+          const { prefix, partValue } = ERROR_MESSAGES;
+          throw new Error(prefix + partValue);
         }
       }
       this.parts = parts;
@@ -206,6 +218,14 @@ ipMain.IPv6 = (function() {
 
       return res;
     }
+
+    // toEmbeddedString() {
+    //   const res = this.toString();
+    //   if (res.includes('%')) {
+    //     const { prefix, linkLocEmbed } = ERROR_MESSAGES;
+    //     throw new Error(prefix + linkLocEmbed);
+    //   }
+    // }
   }
 
   return Ipv6;
@@ -294,7 +314,8 @@ ipMain.parse = function(ip) {
     return ipv6Result;
   }
 
-  throw new Error('ip-manipulator: invalid ip address');
+  const { prefix, invalidIp } = ERROR_MESSAGES;
+  throw new Error(prefix + invalidIp);
 };
 
 
