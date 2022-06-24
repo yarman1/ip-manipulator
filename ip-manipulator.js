@@ -248,9 +248,8 @@ ipMain.IPv6.isValid = function(ip) {
 };
 
 ipMain.IPv6._parser = function(ip) {
-  if (!this.isValid(ip)) {
-    return null;
-  }
+  if (!this.isValid(ip)) return null;
+
   const { ipv6Length, allOctetsValues } = NUMBER_CONSTANTS;
   const result = {
     parts: [],
