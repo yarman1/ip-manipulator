@@ -303,7 +303,8 @@ ipMain.parse = function(ip) {
 
   if (ipv4Result) {
     return ipv4Result;
-  } else if (ipv6Result) {
+  }
+  if (ipv6Result) {
     return ipv6Result;
   }
 
