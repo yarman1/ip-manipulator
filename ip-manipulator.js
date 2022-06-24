@@ -48,47 +48,44 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
-ipMain.IPv4 = (function() {
-  class Ipv4 {
-    constructor(parts) {
-      const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
-      if (parts.length !== ipv4Length) {
-        const { prefix, partsNum } = ERROR_MESSAGES;
-        throw new Error(prefix + partsNum);
+ipMain.IPv4 = class {
+  constructor(parts) {
+    const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
+    if (parts.length !== ipv4Length) {
+      const { prefix, partsNum } = ERROR_MESSAGES;
+      throw new Error(prefix + partsNum);
+    }
+    for (const part of parts) {
+      if (part < ipv4PartMin || part > ipv4PartMax) {
+        const { prefix, partValue } = ERROR_MESSAGES;
+        throw new Error(prefix + partValue);
       }
-      for (const part of parts) {
-        if (part < ipv4PartMin || part > ipv4PartMax) {
-          const { prefix, partValue } = ERROR_MESSAGES;
-          throw new Error(prefix + partValue);
-        }
-      }
-      this.parts = parts;
-      this.type = 'IPv4';
     }
-    // kind() {
-    //   const mak = this.isValid('192.168.0.1');
-    //   return mak;
-    // }
-    _serializator(base) {
-      const res = [];
-      for (const part of this.parts) {
-        res.push(part.toString(base));
-      }
-      return res.join('.');
-    }
-
-    toString() {
-      const { decBase } = NUMBER_CONSTANTS;
-      return this._serializator(decBase);
-    }
-
-    toHexString() {
-      const { hexBase } = NUMBER_CONSTANTS;
-      return this._serializator(hexBase);
-    }
+    this.parts = parts;
+    this.type = 'IPv4';
   }
-  return Ipv4;
-})();
+  // kind() {
+  //   const mak = this.isValid('192.168.0.1');
+  //   return mak;
+  // }
+  _serializator(base) {
+    const res = [];
+    for (const part of this.parts) {
+      res.push(part.toString(base));
+    }
+    return res.join('.');
+  }
+
+  toString() {
+    const { decBase } = NUMBER_CONSTANTS;
+    return this._serializator(decBase);
+  }
+
+  toHexString() {
+    const { hexBase } = NUMBER_CONSTANTS;
+    return this._serializator(hexBase);
+  }
+};
 
 ipMain.IPv4.isValid = function(ip) {
   if (!ip) return false;
@@ -129,107 +126,103 @@ ipMain.IPv4._parse = function(ip) {
   return null;
 };
 
-ipMain.IPv6 = (function() {
-  class Ipv6 {
-    constructor(parts, zoneId) {
-      const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
-      if (parts.length !== ipv6Length) {
-        const { prefix, partsNum } = ERROR_MESSAGES;
-        throw new Error(prefix + partsNum);
-      }
-      for (const part of parts) {
-        if (part < ipv6PartMin || part > ipv6PartMax) {
-          const { prefix, partValue } = ERROR_MESSAGES;
-          throw new Error(prefix + partValue);
-        }
-      }
-      this.parts = parts;
-      this.type = 'IPv6';
-      if (zoneId) {
-        this.zoneId = zoneId;
+ipMain.IPv6 = class {
+  constructor(parts, zoneId) {
+    const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
+    if (parts.length !== ipv6Length) {
+      const { prefix, partsNum } = ERROR_MESSAGES;
+      throw new Error(prefix + partsNum);
+    }
+    for (const part of parts) {
+      if (part < ipv6PartMin || part > ipv6PartMax) {
+        const { prefix, partValue } = ERROR_MESSAGES;
+        throw new Error(prefix + partValue);
       }
     }
-
-    _modifyShorteningState(state) {
-      if (state.length > state.cacheMax[0]) {
-        const { firstIndex, length } = state;
-        state.cacheMax = [length, firstIndex];
-      }
+    this.parts = parts;
+    this.type = 'IPv6';
+    if (zoneId) {
+      this.zoneId = zoneId;
     }
-
-    toString() {
-      const { hexBase, ipv6Length } = NUMBER_CONSTANTS;
-      const shorteningState = {
-        firstIndex: 0,
-        length: 0,
-        process: false,
-        cacheMax: [0, 0],
-      };
-
-      const stringArr = this.parts.map((part, index) => {
-        if (part === 0) {
-          if (!shorteningState.process) {
-            shorteningState.process = true;
-            shorteningState.firstIndex = index;
-            shorteningState.length = 1;
-          } else {
-            shorteningState.length++;
-          }
-          if (index === ipv6Length - 1) {
-            this._modifyShorteningState(shorteningState);
-          }
-        } else if (shorteningState.process) {
-          shorteningState.process = false;
-          this._modifyShorteningState(shorteningState);
-        }
-        return part.toString(hexBase);
-      });
-
-      const [length, firstIndex] = shorteningState.cacheMax;
-      if (firstIndex + length === stringArr.length || firstIndex === 0) {
-        stringArr.splice(firstIndex, length, ':');
-      } else {
-        stringArr.splice(firstIndex, length, '');
-      }
-
-      let res = stringArr.join(':');
-
-      if (this.zoneId) res += `%${this.zoneId}`;
-
-      return res;
-    }
-
-    toNormalizedString() {
-      const { hexBase, ipv6PartNormalLength } = NUMBER_CONSTANTS;
-
-      const stringArr = this.parts.map((part) => {
-        let result = part.toString(hexBase);
-        const partLength = result.length;
-        if (partLength < ipv6PartNormalLength) {
-          for (let i = 0; i < ipv6PartNormalLength - partLength; i++) {
-            result = '0' + result;
-          }
-        }
-        return result;
-      });
-
-      let res = stringArr.join(':');
-      if (this.zoneId) res += `%${this.zoneId}`;
-
-      return res;
-    }
-
-    // toEmbeddedString() {
-    //   const res = this.toString();
-    //   if (res.includes('%')) {
-    //     const { prefix, linkLocEmbed } = ERROR_MESSAGES;
-    //     throw new Error(prefix + linkLocEmbed);
-    //   }
-    // }
   }
 
-  return Ipv6;
-})();
+  _modifyShorteningState(state) {
+    if (state.length > state.cacheMax[0]) {
+      const { firstIndex, length } = state;
+      state.cacheMax = [length, firstIndex];
+    }
+  }
+
+  toString() {
+    const { hexBase, ipv6Length } = NUMBER_CONSTANTS;
+    const shorteningState = {
+      firstIndex: 0,
+      length: 0,
+      process: false,
+      cacheMax: [0, 0],
+    };
+
+    const stringArr = this.parts.map((part, index) => {
+      if (part === 0) {
+        if (!shorteningState.process) {
+          shorteningState.process = true;
+          shorteningState.firstIndex = index;
+          shorteningState.length = 1;
+        } else {
+          shorteningState.length++;
+        }
+        if (index === ipv6Length - 1) {
+          this._modifyShorteningState(shorteningState);
+        }
+      } else if (shorteningState.process) {
+        shorteningState.process = false;
+        this._modifyShorteningState(shorteningState);
+      }
+      return part.toString(hexBase);
+    });
+
+    const [length, firstIndex] = shorteningState.cacheMax;
+    if (firstIndex + length === stringArr.length || firstIndex === 0) {
+      stringArr.splice(firstIndex, length, ':');
+    } else {
+      stringArr.splice(firstIndex, length, '');
+    }
+
+    let res = stringArr.join(':');
+
+    if (this.zoneId) res += `%${this.zoneId}`;
+
+    return res;
+  }
+
+  toNormalizedString() {
+    const { hexBase, ipv6PartNormalLength } = NUMBER_CONSTANTS;
+
+    const stringArr = this.parts.map((part) => {
+      let result = part.toString(hexBase);
+      const partLength = result.length;
+      if (partLength < ipv6PartNormalLength) {
+        for (let i = 0; i < ipv6PartNormalLength - partLength; i++) {
+          result = '0' + result;
+        }
+      }
+      return result;
+    });
+
+    let res = stringArr.join(':');
+    if (this.zoneId) res += `%${this.zoneId}`;
+
+    return res;
+  }
+
+  // toEmbeddedString() {
+  //   const res = this.toString();
+  //   if (res.includes('%')) {
+  //     const { prefix, linkLocEmbed } = ERROR_MESSAGES;
+  //     throw new Error(prefix + linkLocEmbed);
+  //   }
+  // }
+};
 
 ipMain.IPv6.isEmbedded = function(ip) {
   const lastPart = ip.split(':').pop();
