@@ -10,6 +10,8 @@ const NUMBER_CONSTANTS = {
   allOctetsValues: 256,
   decBase: 10,
   hexBase: 16,
+  binBase: 2,
+  ipv6PartBitLength: 16,
   ipv6PartNormalLength: 4,
 };
 
@@ -153,8 +155,18 @@ ipMain.IPv6 = class {
     }
   }
 
-  toString() {
+  _serializator(nativePartsLength) {
     const { hexBase, ipv6Length } = NUMBER_CONSTANTS;
+    if (!nativePartsLength) {
+      nativePartsLength = ipv6Length;
+    }
+    let parts = [];
+    if (nativePartsLength < ipv6Length) {
+      parts = this.parts.slice(0, nativePartsLength);
+    } else {
+      parts = this.parts;
+    }
+
     const shorteningState = {
       firstIndex: 0,
       length: 0,
@@ -162,7 +174,7 @@ ipMain.IPv6 = class {
       cacheMax: [0, 0],
     };
 
-    const stringArr = this.parts.map((part, index) => {
+    const stringArr = parts.map((part, index) => {
       if (part === 0) {
         if (!shorteningState.process) {
           shorteningState.process = true;
@@ -171,7 +183,7 @@ ipMain.IPv6 = class {
         } else {
           shorteningState.length++;
         }
-        if (index === ipv6Length - 1) {
+        if (index === nativePartsLength - 1) {
           this._modifyShorteningState(shorteningState);
         }
       } else if (shorteningState.process) {
@@ -195,6 +207,18 @@ ipMain.IPv6 = class {
     return res;
   }
 
+  _normalize(length, normalLength, string) {
+    for (let i = 0; i < normalLength - length; i++) {
+      string = '0' + string;
+    }
+    return string;
+  }
+
+  toString() {
+    const res = this._serializator();
+    return res;
+  }
+
   toNormalizedString() {
     const { hexBase, ipv6PartNormalLength } = NUMBER_CONSTANTS;
 
@@ -202,9 +226,7 @@ ipMain.IPv6 = class {
       let result = part.toString(hexBase);
       const partLength = result.length;
       if (partLength < ipv6PartNormalLength) {
-        for (let i = 0; i < ipv6PartNormalLength - partLength; i++) {
-          result = '0' + result;
-        }
+        result = this._normalize(partLength, ipv6PartNormalLength, result);
       }
       return result;
     });
@@ -215,13 +237,44 @@ ipMain.IPv6 = class {
     return res;
   }
 
-  // toEmbeddedString() {
-  //   const res = this.toString();
-  //   if (res.includes('%')) {
-  //     const { prefix, linkLocEmbed } = ERROR_MESSAGES;
-  //     throw new Error(prefix + linkLocEmbed);
-  //   }
-  // }
+  toEmbeddedString() {
+    if (this.zoneId) {
+      const { prefix, linkLocEmbed } = ERROR_MESSAGES;
+      throw new Error(prefix + linkLocEmbed);
+    }
+    const { binBase, ipv6PartBitLength, ipv6Length } = NUMBER_CONSTANTS;
+    const nativeSegment = this._serializator(ipv6Length - 2);
+
+    const ipv4SegmentArray = this.parts.slice(-2).map((part) => {
+      part = part.toString(binBase);
+      const partBinLength = part.length;
+      if (partBinLength < ipv6PartBitLength) {
+        part = this._normalize(partBinLength, ipv6PartBitLength, part);
+      }
+
+      const bitArray = part.split('');
+      const half = bitArray.length / 2;
+
+      const firstHalf = bitArray.splice(0, half).join('');
+      const secondHalf = bitArray.splice(-half).join('');
+
+      return [firstHalf, secondHalf];
+    });
+
+    const ipv4Segment = ipv4SegmentArray.flat()
+      .map((part) => parseInt(part, binBase))
+      .join('.');
+
+    let res = nativeSegment;
+
+    if (nativeSegment[nativeSegment.length - 1] !== ':') {
+      res += ':' + ipv4Segment;
+    } else {
+      res += ipv4Segment;
+    }
+
+    return res;
+  }
 };
 
 ipMain.IPv6.isEmbedded = function(ip) {
