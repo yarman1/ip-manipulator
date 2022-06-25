@@ -66,10 +66,11 @@ ipMain.IPv4 = class {
     this.parts = parts;
     this.type = 'IPv4';
   }
-  // kind() {
-  //   const mak = this.isValid('192.168.0.1');
-  //   return mak;
-  // }
+
+  kind() {
+    return this.type;
+  }
+
   _serializator(base) {
     const res = [];
     for (const part of this.parts) {
@@ -146,6 +147,10 @@ ipMain.IPv6 = class {
     if (zoneId) {
       this.zoneId = zoneId;
     }
+  }
+
+  kind() {
+    return this.type;
   }
 
   _modifyShorteningState(state) {
