@@ -10,7 +10,13 @@ const assert = require('assert').strict;
 const tester = function(data, testOp, resultArray, obj, funcName, property) {
   for (const test of data) {
     const [par, expected, name] = test;
-    const result = property ? obj[funcName](par)[property] : obj[funcName](par);
+    let result = null;
+    if (typeof obj[funcName](par)[property] === 'function') {
+      result = obj[funcName](par)[property]();
+    } else {
+      result = property ? obj[funcName](par)[property] : obj[funcName](par);
+    }
+
     try {
       assert[testOp](result, expected, `Error in test "${name}"`);
     } catch (err) {
@@ -83,6 +89,74 @@ const tester = function(data, testOp, resultArray, obj, funcName, property) {
   ];
 
   tester(parsingTests, 'deepEqual', results, ipMain, 'parse', 'parts');
+
+  console.table(results);
+}
+
+// Tests of serialization system
+// It correctly serializes ip addresses into string
+// IPv4 methods: toString(), toHexString()
+// IPv6 methods: toString(), toNormalizedString(), toEmbeddedString()
+// Pay attention that toEmbeddedString() won't work with link local addresses
+
+
+{
+  console.log(' ');
+  console.log('Serialization tests');
+
+  const results = [];
+
+  const ipv4DecTests = [
+    ['192.168.0.1',
+      '192.168.0.1',
+      'Serialization to decimal IPv4 address'],
+  ];
+
+  const ipv4HexTests = [
+    ['192.168.0.1',
+      'c0.a8.0.1',
+      'Serialization to hexadecimal IPv4 address'],
+  ];
+
+  const ipv6NatTests = [
+    ['2041:0000:140F:0000:0000:0000:875B:131B',
+      '2041:0:140f::875b:131b',
+      'Serialization to short IPv6 native address'],
+    ['fe80::ce80:ff88%eth2',
+      'fe80::ce80:ff88%eth2',
+      'Serialization to short link local IPv6 address'],
+  ];
+
+  const ipv6NatNormTests = [
+    ['2041:0000:140F::875B:131B',
+      '2041:0000:140f:0000:0000:0000:875b:131b',
+      'Serialization to normalized IPv6 native address'],
+    ['fe80::ce80:ff88%eth2',
+      'fe80:0000:0000:0000:0000:0000:ce80:ff88%eth2',
+      'Serialization to normalized link local IPv6 address'],
+  ];
+
+  const ipv6EmbeddedTests = [
+    ['2041:0000:140F:0000:0000:0000:875B:131B',
+      '2041:0:140f::135.91.19.27',
+      'Serialization to IPv4 embedded IPv6 address'],
+  ];
+
+  tester(ipv4DecTests, 'strictEqual', results, ipMain, 'parse', 'toString');
+  tester(ipv4HexTests, 'strictEqual', results, ipMain, 'parse', 'toHexString');
+  tester(ipv6NatTests, 'strictEqual', results, ipMain, 'parse', 'toString');
+  tester(ipv6NatNormTests,
+    'strictEqual',
+    results,
+    ipMain,
+    'parse',
+    'toNormalizedString');
+  tester(ipv6EmbeddedTests,
+    'strictEqual',
+    results,
+    ipMain,
+    'parse',
+    'toEmbeddedString');
 
   console.table(results);
 }

@@ -8,6 +8,19 @@ const NUMBER_CONSTANTS = {
   ipv6PartMax: 0xffff,
   ipv6PartMin: 0,
   allOctetsValues: 256,
+  decBase: 10,
+  hexBase: 16,
+  binBase: 2,
+  ipv6PartBitLength: 16,
+  ipv6PartNormalLength: 4,
+};
+
+const ERROR_MESSAGES = {
+  prefix: 'ip-manipulator:',
+  partsNum: ' invalid parts number',
+  partValue: ' invalid part value',
+  linkLocEmbed: ' can\'t serialize embedded version of this address',
+  invalidIp: ' invalid ip address',
 };
 
 const IP_PARTS = {
@@ -37,28 +50,45 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
-ipMain.IPv4 = (function() {
-  class Ipv4 {
-    constructor(parts) {
-      const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
-      if (parts.length !== ipv4Length) {
-        throw new Error('ip-manipulator: invalid octets number');
-      }
-      for (const part of parts) {
-        if (part < ipv4PartMin || part > ipv4PartMax) {
-          throw new Error('ip-manipulator: invalid octet value');
-        }
-      }
-      this.parts = parts;
-      this.type = 'IPv4';
+ipMain.IPv4 = class {
+  constructor(parts) {
+    const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
+    if (parts.length !== ipv4Length) {
+      const { prefix, partsNum } = ERROR_MESSAGES;
+      throw new Error(prefix + partsNum);
     }
-    kind() {
-      const mak = this.isValid('192.168.0.1');
-      return mak;
+    for (const part of parts) {
+      if (part < ipv4PartMin || part > ipv4PartMax) {
+        const { prefix, partValue } = ERROR_MESSAGES;
+        throw new Error(prefix + partValue);
+      }
     }
+    this.parts = parts;
+    this.type = 'IPv4';
   }
-  return Ipv4;
-})();
+
+  kind() {
+    return this.type;
+  }
+
+  _serializator(base) {
+    const res = [];
+    for (const part of this.parts) {
+      res.push(part.toString(base));
+    }
+    return res.join('.');
+  }
+
+  toString() {
+    const { decBase } = NUMBER_CONSTANTS;
+    return this._serializator(decBase);
+  }
+
+  toHexString() {
+    const { hexBase } = NUMBER_CONSTANTS;
+    return this._serializator(hexBase);
+  }
+};
 
 ipMain.IPv4.isValid = function(ip) {
   if (!ip) return false;
@@ -99,28 +129,158 @@ ipMain.IPv4._parse = function(ip) {
   return null;
 };
 
-ipMain.IPv6 = (function() {
-  class Ipv6 {
-    constructor(parts, zoneId) {
-      const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
-      if (parts.length !== ipv6Length) {
-        throw new Error('ip-manipulator: invalid parts number');
+ipMain.IPv6 = class {
+  constructor(parts, zoneId) {
+    const { ipv6PartMax, ipv6PartMin, ipv6Length } = NUMBER_CONSTANTS;
+    if (parts.length !== ipv6Length) {
+      const { prefix, partsNum } = ERROR_MESSAGES;
+      throw new Error(prefix + partsNum);
+    }
+    for (const part of parts) {
+      if (part < ipv6PartMin || part > ipv6PartMax) {
+        const { prefix, partValue } = ERROR_MESSAGES;
+        throw new Error(prefix + partValue);
       }
-      for (const part of parts) {
-        if (part < ipv6PartMin || part > ipv6PartMax) {
-          throw new Error('ip-manipulator: invalid part value');
-        }
-      }
-      this.parts = parts;
-      this.type = 'IPv6';
-      if (zoneId) {
-        this.zoneId = zoneId;
-      }
+    }
+    this.parts = parts;
+    this.type = 'IPv6';
+    if (zoneId) {
+      this.zoneId = zoneId;
     }
   }
 
-  return Ipv6;
-})();
+  kind() {
+    return this.type;
+  }
+
+  _modifyShorteningState(state) {
+    if (state.length > state.cacheMax[0]) {
+      const { firstIndex, length } = state;
+      state.cacheMax = [length, firstIndex];
+    }
+  }
+
+  _serializator(nativePartsLength) {
+    const { hexBase, ipv6Length } = NUMBER_CONSTANTS;
+    if (!nativePartsLength) {
+      nativePartsLength = ipv6Length;
+    }
+    let parts = [];
+    if (nativePartsLength < ipv6Length) {
+      parts = this.parts.slice(0, nativePartsLength);
+    } else {
+      parts = this.parts;
+    }
+
+    const shorteningState = {
+      firstIndex: 0,
+      length: 0,
+      process: false,
+      cacheMax: [0, 0],
+    };
+
+    const stringArr = parts.map((part, index) => {
+      if (part === 0) {
+        if (!shorteningState.process) {
+          shorteningState.process = true;
+          shorteningState.firstIndex = index;
+          shorteningState.length = 1;
+        } else {
+          shorteningState.length++;
+        }
+        if (index === nativePartsLength - 1) {
+          this._modifyShorteningState(shorteningState);
+        }
+      } else if (shorteningState.process) {
+        shorteningState.process = false;
+        this._modifyShorteningState(shorteningState);
+      }
+      return part.toString(hexBase);
+    });
+
+    const [length, firstIndex] = shorteningState.cacheMax;
+    if (firstIndex + length === stringArr.length || firstIndex === 0) {
+      stringArr.splice(firstIndex, length, ':');
+    } else {
+      stringArr.splice(firstIndex, length, '');
+    }
+
+    let res = stringArr.join(':');
+
+    if (this.zoneId) res += `%${this.zoneId}`;
+
+    return res;
+  }
+
+  _normalize(length, normalLength, string) {
+    for (let i = 0; i < normalLength - length; i++) {
+      string = '0' + string;
+    }
+    return string;
+  }
+
+  toString() {
+    const res = this._serializator();
+    return res;
+  }
+
+  toNormalizedString() {
+    const { hexBase, ipv6PartNormalLength } = NUMBER_CONSTANTS;
+
+    const stringArr = this.parts.map((part) => {
+      let result = part.toString(hexBase);
+      const partLength = result.length;
+      if (partLength < ipv6PartNormalLength) {
+        result = this._normalize(partLength, ipv6PartNormalLength, result);
+      }
+      return result;
+    });
+
+    let res = stringArr.join(':');
+    if (this.zoneId) res += `%${this.zoneId}`;
+
+    return res;
+  }
+
+  toEmbeddedString() {
+    if (this.zoneId) {
+      const { prefix, linkLocEmbed } = ERROR_MESSAGES;
+      throw new Error(prefix + linkLocEmbed);
+    }
+    const { binBase, ipv6PartBitLength, ipv6Length } = NUMBER_CONSTANTS;
+    const nativeSegment = this._serializator(ipv6Length - 2);
+
+    const ipv4SegmentArray = this.parts.slice(-2).map((part) => {
+      part = part.toString(binBase);
+      const partBinLength = part.length;
+      if (partBinLength < ipv6PartBitLength) {
+        part = this._normalize(partBinLength, ipv6PartBitLength, part);
+      }
+
+      const bitArray = part.split('');
+      const half = bitArray.length / 2;
+
+      const firstHalf = bitArray.splice(0, half).join('');
+      const secondHalf = bitArray.splice(-half).join('');
+
+      return [firstHalf, secondHalf];
+    });
+
+    const ipv4Segment = ipv4SegmentArray.flat()
+      .map((part) => parseInt(part, binBase))
+      .join('.');
+
+    let res = nativeSegment;
+
+    if (nativeSegment[nativeSegment.length - 1] !== ':') {
+      res += ':' + ipv4Segment;
+    } else {
+      res += ipv4Segment;
+    }
+
+    return res;
+  }
+};
 
 ipMain.IPv6.isEmbedded = function(ip) {
   const lastPart = ip.split(':').pop();
@@ -146,9 +306,8 @@ ipMain.IPv6.isValid = function(ip) {
 };
 
 ipMain.IPv6._parser = function(ip) {
-  if (!this.isValid(ip)) {
-    return null;
-  }
+  if (!this.isValid(ip)) return null;
+
   const { ipv6Length, allOctetsValues } = NUMBER_CONSTANTS;
   const result = {
     parts: [],
@@ -201,11 +360,14 @@ ipMain.parse = function(ip) {
 
   if (ipv4Result) {
     return ipv4Result;
-  } else if (ipv6Result) {
+  }
+  if (ipv6Result) {
     return ipv6Result;
   }
 
-  throw new Error('ip-manipulator: invalid ip address');
+  const { prefix, invalidIp } = ERROR_MESSAGES;
+  throw new Error(prefix + invalidIp);
 };
+
 
 module.exports = ipMain;
