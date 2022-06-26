@@ -51,7 +51,13 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
-ipMain._normalize = function(length, normalLength, string) {
+ipMain._normalize = function(length, normalLength, string, reverse) {
+  if (reverse) {
+    for (let i = 0; i < normalLength - length; i++) {
+      string += '0';
+    }
+    return string;
+  }
   for (let i = 0; i < normalLength - length; i++) {
     string = '0' + string;
   }
@@ -168,8 +174,28 @@ ipMain.IPv4._parse = function(ip) {
   return null;
 };
 
-ipMain.IPv4.maskFromPrefix = function() {
+ipMain.IPv4.maskFromPrefix = function(prefix) {
+  if (prefix === 0) {
+    const zeroMask = new this([0, 0, 0, 0]);
+    return zeroMask.toString();
+  }
 
+  const { ipv4Length, ipv4PartBitLength, binBase } = NUMBER_CONSTANTS;
+  const ipv4BitLength = ipv4Length * ipv4PartBitLength;
+
+  let maskBin = '1';
+  maskBin = maskBin.repeat(prefix);
+  if (maskBin.length < ipv4BitLength) {
+    maskBin = ipMain._normalize(maskBin.length, ipv4BitLength, maskBin, true);
+  }
+
+  const maskBinArray = [];
+  for (let i = ipv4PartBitLength; i <= ipv4BitLength; i += ipv4PartBitLength) {
+    maskBinArray.push(maskBin.slice(i - ipv4PartBitLength, i));
+  }
+
+  const mask = new this(maskBinArray.map((part) => parseInt(part, binBase)));
+  return mask.toString();
 };
 
 ipMain.IPv6 = class {
