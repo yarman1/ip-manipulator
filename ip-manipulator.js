@@ -281,13 +281,6 @@ ipMain.IPv6 = class {
     return res;
   }
 
-  _normalize(length, normalLength, string) {
-    for (let i = 0; i < normalLength - length; i++) {
-      string = '0' + string;
-    }
-    return string;
-  }
-
   toString() {
     const res = this._serializator();
     return res;
@@ -300,7 +293,7 @@ ipMain.IPv6 = class {
       let result = part.toString(hexBase);
       const partLength = result.length;
       if (partLength < ipv6PartNormalLength) {
-        result = this._normalize(partLength, ipv6PartNormalLength, result);
+        result = ipMain._normalize(partLength, ipv6PartNormalLength, result);
       }
       return result;
     });
@@ -323,7 +316,7 @@ ipMain.IPv6 = class {
       part = part.toString(binBase);
       const partBinLength = part.length;
       if (partBinLength < ipv6PartBitLength) {
-        part = this._normalize(partBinLength, ipv6PartBitLength, part);
+        part = ipMain._normalize(partBinLength, ipv6PartBitLength, part);
       }
 
       const bitArray = part.split('');
