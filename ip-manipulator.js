@@ -51,6 +51,13 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
+ipMain._normalize = function(length, normalLength, string) {
+  for (let i = 0; i < normalLength - length; i++) {
+    string = '0' + string;
+  }
+  return string;
+};
+
 ipMain.IPv4 = class {
   constructor(parts) {
     const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
@@ -66,13 +73,6 @@ ipMain.IPv4 = class {
     }
     this.parts = parts;
     this.type = 'IPv4';
-  }
-
-  _normalize(length, normalLength, string) {
-    for (let i = 0; i < normalLength - length; i++) {
-      string = '0' + string;
-    }
-    return string;
   }
 
   kind() {
@@ -166,6 +166,10 @@ ipMain.IPv4._parse = function(ip) {
     return new this(result);
   }
   return null;
+};
+
+ipMain.IPv4.maskFromPrefix = function() {
+
 };
 
 ipMain.IPv6 = class {
