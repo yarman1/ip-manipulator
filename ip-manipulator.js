@@ -12,6 +12,7 @@ const NUMBER_CONSTANTS = {
   hexBase: 16,
   binBase: 2,
   ipv6PartBitLength: 16,
+  ipv4PartBitLength: 8,
   ipv6PartNormalLength: 4,
 };
 
@@ -50,6 +51,19 @@ const IPV6_REG_EXPRESSIONS = {
 
 const ipMain = {};
 
+ipMain._normalize = function(length, normalLength, string, reverse) {
+  if (reverse) {
+    for (let i = 0; i < normalLength - length; i++) {
+      string += '0';
+    }
+    return string;
+  }
+  for (let i = 0; i < normalLength - length; i++) {
+    string = '0' + string;
+  }
+  return string;
+};
+
 ipMain.IPv4 = class {
   constructor(parts) {
     const { ipv4PartMax, ipv4PartMin, ipv4Length } = NUMBER_CONSTANTS;
@@ -71,6 +85,37 @@ ipMain.IPv4 = class {
     return this.type;
   }
 
+  prefixFromMask() {
+    const { binBase, ipv4PartBitLength } = NUMBER_CONSTANTS;
+    const maskBin = this.parts.map((part) => {
+      part = part.toString(binBase);
+      if (part.length < ipv4PartBitLength) {
+        part = this._normalize(part.length, ipv4PartBitLength, part);
+      }
+      return part;
+    }).join('');
+
+    let counter = 0;
+    if (!maskBin.includes('1')) {
+      return counter;
+    }
+
+    if (maskBin[0] !== '1') {
+      return null;
+    }
+
+    const maskBinArray = maskBin.split('0').filter((element) => !!element);
+    if (maskBinArray.length > 1) {
+      return null;
+    }
+
+    for (const char of maskBinArray[0]) {
+      if (char !== '1') break;
+      counter++;
+    }
+    return counter;
+  }
+
   _serializator(base) {
     const res = [];
     for (const part of this.parts) {
@@ -88,6 +133,29 @@ ipMain.IPv4 = class {
     const { hexBase } = NUMBER_CONSTANTS;
     return this._serializator(hexBase);
   }
+
+  isSameSubnet(secondAddr, prefix) {
+    const mask = ipMain.IPv4.maskFromPrefix(prefix)
+      .split('.')
+      .map((part) => parseInt(part))
+      .reduce(ipMain.IPv4._toNumberReducer);
+
+    const firstAddrNumber = this.parts
+      .reduce(ipMain.IPv4._toNumberReducer);
+    const secondAddrNumber = secondAddr.parts
+      .reduce(ipMain.IPv4._toNumberReducer);
+
+    if ((firstAddrNumber & mask) === (secondAddrNumber & mask)) {
+      return true;
+    }
+
+    return false;
+  }
+};
+
+ipMain.IPv4._toNumberReducer = function(acc, elem) {
+  const res = acc * 256 + elem;
+  return res;
 };
 
 ipMain.IPv4.isValid = function(ip) {
@@ -127,6 +195,34 @@ ipMain.IPv4._parse = function(ip) {
     return new this(result);
   }
   return null;
+};
+
+ipMain.IPv4.maskFromPrefix = function(prefix) {
+  if (prefix === 0) {
+    const zeroMask = new this([0, 0, 0, 0]);
+    return zeroMask.toString();
+  }
+
+  const { ipv4Length, ipv4PartBitLength, binBase } = NUMBER_CONSTANTS;
+  const ipv4BitLength = ipv4Length * ipv4PartBitLength;
+
+  if (prefix > ipv4BitLength || prefix < 0) {
+    return null;
+  }
+
+  let maskBin = '1';
+  maskBin = maskBin.repeat(prefix);
+  if (maskBin.length < ipv4BitLength) {
+    maskBin = ipMain._normalize(maskBin.length, ipv4BitLength, maskBin, true);
+  }
+
+  const maskBinArray = [];
+  for (let i = ipv4PartBitLength; i <= ipv4BitLength; i += ipv4PartBitLength) {
+    maskBinArray.push(maskBin.slice(i - ipv4PartBitLength, i));
+  }
+
+  const mask = new this(maskBinArray.map((part) => parseInt(part, binBase)));
+  return mask.toString();
 };
 
 ipMain.IPv6 = class {
@@ -212,13 +308,6 @@ ipMain.IPv6 = class {
     return res;
   }
 
-  _normalize(length, normalLength, string) {
-    for (let i = 0; i < normalLength - length; i++) {
-      string = '0' + string;
-    }
-    return string;
-  }
-
   toString() {
     const res = this._serializator();
     return res;
@@ -231,7 +320,7 @@ ipMain.IPv6 = class {
       let result = part.toString(hexBase);
       const partLength = result.length;
       if (partLength < ipv6PartNormalLength) {
-        result = this._normalize(partLength, ipv6PartNormalLength, result);
+        result = ipMain._normalize(partLength, ipv6PartNormalLength, result);
       }
       return result;
     });
@@ -254,7 +343,7 @@ ipMain.IPv6 = class {
       part = part.toString(binBase);
       const partBinLength = part.length;
       if (partBinLength < ipv6PartBitLength) {
-        part = this._normalize(partBinLength, ipv6PartBitLength, part);
+        part = ipMain._normalize(partBinLength, ipv6PartBitLength, part);
       }
 
       const bitArray = part.split('');
