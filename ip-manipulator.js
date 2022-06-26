@@ -133,6 +133,29 @@ ipMain.IPv4 = class {
     const { hexBase } = NUMBER_CONSTANTS;
     return this._serializator(hexBase);
   }
+
+  isSameSubnet(secondAddr, prefix) {
+    const mask = ipMain.IPv4.maskFromPrefix(prefix)
+      .split('.')
+      .map((part) => parseInt(part))
+      .reduce(ipMain.IPv4._toNumberReducer);
+
+    const firstAddrNumber = this.parts
+      .reduce(ipMain.IPv4._toNumberReducer);
+    const secondAddrNumber = secondAddr.parts
+      .reduce(ipMain.IPv4._toNumberReducer);
+
+    if ((firstAddrNumber & mask) === (secondAddrNumber & mask)) {
+      return true;
+    }
+
+    return false;
+  }
+};
+
+ipMain.IPv4._toNumberReducer = function(acc, elem) {
+  const res = acc * 256 + elem;
+  return res;
 };
 
 ipMain.IPv4.isValid = function(ip) {
