@@ -12,6 +12,7 @@ const NUMBER_CONSTANTS = {
   hexBase: 16,
   binBase: 2,
   ipv6PartBitLength: 16,
+  ipv4PartBitLength: 8,
   ipv6PartNormalLength: 4,
 };
 
@@ -67,8 +68,46 @@ ipMain.IPv4 = class {
     this.type = 'IPv4';
   }
 
+  _normalize(length, normalLength, string) {
+    for (let i = 0; i < normalLength - length; i++) {
+      string = '0' + string;
+    }
+    return string;
+  }
+
   kind() {
     return this.type;
+  }
+
+  prefixFromMask() {
+    const { binBase, ipv4PartBitLength } = NUMBER_CONSTANTS;
+    const maskBin = this.parts.map((part) => {
+      part = part.toString(binBase);
+      if (part.length < ipv4PartBitLength) {
+        part = this._normalize(part.length, ipv4PartBitLength, part);
+      }
+      return part;
+    }).join('');
+
+    let counter = 0;
+    if (!maskBin.includes('1')) {
+      return counter;
+    }
+
+    if (maskBin[0] !== '1') {
+      return null;
+    }
+
+    const maskBinArray = maskBin.split('0').filter((element) => !!element);
+    if (maskBinArray.length > 1) {
+      return null;
+    }
+
+    for (const char of maskBinArray[0]) {
+      if (char !== '1') break;
+      counter++;
+    }
+    return counter;
   }
 
   _serializator(base) {
