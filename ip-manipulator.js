@@ -183,6 +183,10 @@ ipMain.IPv4.maskFromPrefix = function(prefix) {
   const { ipv4Length, ipv4PartBitLength, binBase } = NUMBER_CONSTANTS;
   const ipv4BitLength = ipv4Length * ipv4PartBitLength;
 
+  if (prefix > ipv4BitLength || prefix < 0) {
+    return null;
+  }
+
   let maskBin = '1';
   maskBin = maskBin.repeat(prefix);
   if (maskBin.length < ipv4BitLength) {
